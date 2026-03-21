@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "25:25"      # SMTP — приём входящей почты
+      - "3000:3000"  # API (можно убрать если не нужен прямой доступ)
+    volumes:
+      - mail_data:/data
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        - NGINX_CONF=../nginx.conf
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  mail_data:
+    driver: local
