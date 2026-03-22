@@ -61,8 +61,14 @@ router.post('/send', async (req, res) => {
           user: process.env.SMTP_RELAY_USER,
           pass: process.env.SMTP_RELAY_PASS,
         },
+        tls: { rejectUnauthorized: false },
       }
-    : { host: 'localhost', port: parseInt(process.env.SMTP_PORT || '25'), direct: true };
+    : {
+        host: 'localhost',
+        port: parseInt(process.env.SMTP_PORT || '25'),
+        direct: true,
+        tls: { rejectUnauthorized: false },
+      };
 
   try {
     const transporter = nodemailer.createTransport(transportConfig);
