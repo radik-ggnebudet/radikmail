@@ -53,3 +53,44 @@ export const api = {
     return request('/emails/counts/unread', { headers: headers() });
   },
 };
+
+const adminHeaders = () => ({
+  'Content-Type': 'application/json',
+  Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
+});
+
+export const adminApi = {
+  login(password) {
+    return request('/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password }),
+    });
+  },
+
+  getStats() {
+    return request('/admin/stats', { headers: adminHeaders() });
+  },
+
+  getUsers() {
+    return request('/admin/users', { headers: adminHeaders() });
+  },
+
+  createUser(email, password) {
+    return request('/admin/users', {
+      method: 'POST',
+      headers: adminHeaders(),
+      body: JSON.stringify({ email, password }),
+    });
+  },
+
+  deleteUser(id) {
+    return request(`/admin/users/${id}`, { method: 'DELETE', headers: adminHeaders() });
+  },
+
+  getEmails(limit = 100, offset = 0, search = '') {
+    return request(`/admin/emails?limit=${limit}&offset=${offset}&search=${encodeURIComponent(search)}`, {
+      headers: adminHeaders(),
+    });
+  },
+};

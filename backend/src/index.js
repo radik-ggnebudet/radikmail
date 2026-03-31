@@ -4,6 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const authRoutes = require('./routes/auth');
 const emailRoutes = require('./routes/emails');
+const adminRoutes = require('./routes/admin');
 const authMiddleware = require('./middleware/auth');
 const { createSMTPServer } = require('./smtp');
 
@@ -16,6 +17,7 @@ app.use(express.json());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/emails', authMiddleware, emailRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ ok: true, domain: process.env.DOMAIN });

@@ -5,6 +5,7 @@ import Sidebar from './components/Sidebar';
 import EmailList from './components/EmailList';
 import EmailView from './components/EmailView';
 import Compose from './components/Compose';
+import AdminPanel from './components/AdminPanel';
 
 export default function App() {
   const [user, setUser] = useState(() => {
@@ -12,6 +13,8 @@ export default function App() {
     const email = localStorage.getItem('userEmail');
     return token && email ? { token, email } : null;
   });
+
+  const [adminToken, setAdminToken] = useState(() => localStorage.getItem('adminToken'));
 
   const [folder, setFolder] = useState('inbox');
   const [emails, setEmails] = useState([]);
@@ -65,6 +68,16 @@ export default function App() {
     setUser({ token, email });
   }
 
+  function handleAdminLogin(token) {
+    localStorage.setItem('adminToken', token);
+    setAdminToken(token);
+  }
+
+  function handleAdminLogout() {
+    localStorage.removeItem('adminToken');
+    setAdminToken(null);
+  }
+
   function handleLogout() {
     localStorage.removeItem('token');
     localStorage.removeItem('userEmail');
@@ -103,8 +116,13 @@ export default function App() {
     if (folder === 'sent') await loadEmails();
   }
 
+  // Admin panel
+  if (adminToken) {
+    return <AdminPanel onLogout={handleAdminLogout} />;
+  }
+
   if (!user) {
-    return <Login onLogin={handleLogin} />;
+    return <Login onLogin={handleLogin} onAdminLogin={handleAdminLogin} />;
   }
 
   return (
