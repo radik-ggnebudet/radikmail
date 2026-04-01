@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../db');
+const { adminLoginProtection, loginLimiter, timingSafeCompare, delay } = require('../middleware/security');
 
 const router = express.Router();
 
@@ -23,17 +24,31 @@ function adminAuth(req, res, next) {
 }
 
 // Вход в админку по паролю
-router.post('/login', (req, res) => {
+router.post('/login', loginLimiter(adminLoginProtection), async (req, res) => {
   const { password } = req.body;
   const adminPassword = process.env.ADMIN_PANEL_PASSWORD;
+  const ip = req.ip;
 
   if (!adminPassword) {
     return res.status(500).json({ error: 'ADMIN_PANEL_PASSWORD не настроен' });
   }
 
-  if (!password || password !== adminPassword) {
+  if (!password || !timingSafeCompare(password, adminPassword)) {
+    const { delay: delayMs, totalAttempts } = adminLoginProtection.recordFailure(ip);
+
+    console.log(
+      `[SECURITY][ADMIN_AUTH] Неудачная попытка входа в админку: IP=${ip} попытка=#${totalAttempts} задержка=${delayMs}мс`
+    );
+
+    // Прогрессивная задержка — замедляем ответ
+    await delay(delayMs);
+
     return res.status(401).json({ error: 'Неверный пароль' });
   }
+
+  // Успешный вход — сбрасываем счётчик
+  adminLoginProtection.recordSuccess(ip);
+  console.log(`[SECURITY][ADMIN_AUTH] Успешный вход в админку: IP=${ip}`);
 
   const token = jwt.sign(
     { isAdmin: true },
